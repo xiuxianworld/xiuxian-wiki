@@ -1,0 +1,24 @@
+# 数据库初始化 Dockerfile
+FROM node:18-alpine AS db-init
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
+
+# Copy Prisma files
+COPY prisma ./prisma
+COPY .env* ./
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Create initialization script
+COPY docker-entrypoint-init.sh /docker-entrypoint-init.sh
+RUN chmod +x /docker-entrypoint-init.sh
+
+# Set up database directory
+RUN mkdir -p /app/data
+
+ENTRYPOINT ["/docker-entrypoint-init.sh"]

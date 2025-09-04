@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # 修仙百科应用
+  xiuxian-wiki:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    container_name: xiuxian-wiki-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/production.db
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    volumes:
+      - xiuxian_data:/app/data
+      - xiuxian_prisma:/app/prisma
+    networks:
+      - xiuxian_network
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - db-init
+
+  # 数据库初始化服务
+  db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.init
+    container_name: xiuxian-wiki-db-init
+    environment:
+      - DATABASE_URL=file:/app/data/production.db
+    volumes:
+      - xiuxian_data:/app/data
+      - xiuxian_prisma:/app/prisma
+    networks:
+      - xiuxian_network
+    restart: "no"
+
+  # Nginx 反向代理 (可选)
+  nginx:
+    image: nginx:alpine
+    container_name: xiuxian-wiki-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  # SSL证书目录
+      - xiuxian_logs:/var/log/nginx
+    networks:
+      - xiuxian_network
+    depends_on:
+      - xiuxian-wiki
+    profiles:
+      - production  # 仅在生产环境启用
+
+volumes:
+  xiuxian_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
+  xiuxian_prisma:
+    driver: local
+  xiuxian_logs:
+    driver: local
+
+networks:
+  xiuxian_network:
+    driver: bridge
+    name: xiuxian_network

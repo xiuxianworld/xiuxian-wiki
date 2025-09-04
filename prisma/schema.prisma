@@ -1,0 +1,162 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+  role     String @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 灵根 - Spiritual Roots
+model SpiritualRoot {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // 五行灵根类型：金、木、水、火、土、雷、冰等
+  grade       String   // 品级：下品、中品、上品、极品、天品
+  description String
+  properties  String   // 特性描述
+  rarity      Int      // 稀有度 1-10
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 修行境界 - Cultivation Realms
+model CultivationRealm {
+  id          String   @id @default(cuid())
+  name        String
+  level       Int      // 境界等级
+  stage       String   // 阶段：初期、中期、后期、大圆满
+  description String
+  requirements String  // 突破要求
+  benefits     String  // 境界益处
+  lifespan     String  // 寿命增长
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// 修行类别 - Cultivation Types
+model CultivationType {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // 体修、法修、剑修、丹修等
+  description String
+  characteristics String // 特点
+  advantages   String  // 优势
+  disadvantages String // 劣势
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// 功法 - Techniques/Cultivation Methods
+model Technique {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // 功法类型：攻击、防御、身法、心法等
+  grade       String   // 品级：黄阶、玄阶、地阶、天阶
+  level       String   // 等级：初级、中级、高级
+  description String
+  effects     String   // 修炼效果
+  requirements String  // 修炼要求
+  drawbacks   String?  // 副作用
+  content     String   // 功法内容
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 丹药 - Pills/Elixirs
+model Pill {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // 丹药类型：疗伤、增进修为、辅助突破等
+  grade       String   // 品级：一品到九品
+  description String
+  effects     String   // 药效
+  ingredients String   // 主要材料
+  refinement  String   // 炼制方法
+  sideEffects String?  // 副作用
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 符宝 - Talismans and Treasures
+model Treasure {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // 类型：符箓、法器、灵器、宝器等
+  grade       String   // 品级
+  description String
+  abilities   String   // 能力
+  usage       String   // 使用方法
+  materials   String   // 制作材料
+  restrictions String? // 使用限制
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 灵兽 - Spiritual Beasts
+model SpiritualBeast {
+  id          String   @id @default(cuid())
+  name        String
+  species     String   // 种族
+  level       String   // 等级：一阶到九阶
+  type        String   // 类型：攻击型、防御型、辅助型等
+  description String
+  abilities   String   // 天赋技能
+  habitat     String   // 栖息地
+  behavior    String   // 习性
+  weakness    String?  // 弱点
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 灵草 - Spiritual Herbs
+model SpiritualHerb {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // 类型：药草、毒草、灵果等
+  grade       String   // 品级
+  description String
+  effects     String   // 功效
+  growthTime  String   // 生长周期
+  habitat     String   // 生长环境
+  harvestMethod String // 采集方法
+  preservation String  // 保存方法
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 阵法 - Formations
+model Formation {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // 类型：攻击阵、防御阵、迷阵、聚灵阵等
+  grade       String   // 品级
+  description String
+  effects     String   // 阵法效果
+  materials   String   // 布阵材料
+  arrangement String   // 布阵方法
+  weaknesses  String?  // 破阵方法
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

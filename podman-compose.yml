@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # 修仙百科应用 - Podman 优化版本
+  xiuxian-wiki:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    container_name: xiuxian-wiki-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/production.db
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    volumes:
+      - xiuxian_data:/app/data:Z  # Z flag for SELinux compatibility
+      - xiuxian_prisma:/app/prisma:Z
+    networks:
+      - xiuxian_network
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - db-init
+    # Podman 特定配置
+    security_opt:
+      - label=disable  # 禁用 SELinux 标签
+    # 使用非特权用户运行 (Podman rootless 模式友好)
+    user: "${PODMAN_UID:-1000}:${PODMAN_GID:-1000}"
+
+  # 数据库初始化服务 - Podman 优化版本
+  db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.init
+    container_name: xiuxian-wiki-db-init
+    environment:
+      - DATABASE_URL=file:/app/data/production.db
+    volumes:
+      - xiuxian_data:/app/data:Z
+      - xiuxian_prisma:/app/prisma:Z
+    networks:
+      - xiuxian_network
+    restart: "no"
+    security_opt:
+      - label=disable
+    user: "${PODMAN_UID:-1000}:${PODMAN_GID:-1000}"
+
+  # Nginx 反向代理 (可选) - Podman 优化版本
+  nginx:
+    image: nginx:alpine
+    container_name: xiuxian-wiki-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro,Z
+      - ./ssl:/etc/nginx/ssl:ro,Z  # SSL证书目录
+      - xiuxian_logs:/var/log/nginx:Z
+    networks:
+      - xiuxian_network
+    depends_on:
+      - xiuxian-wiki
+    profiles:
+      - production  # 仅在生产环境启用
+    security_opt:
+      - label=disable
+
+volumes:
+  xiuxian_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
+  xiuxian_prisma:
+    driver: local
+  xiuxian_logs:
+    driver: local
+
+networks:
+  xiuxian_network:
+    driver: bridge
+    # Podman 网络配置
+    driver_opts:
+      # 确保与其他网络不冲突
+      com.docker.network.bridge.name: xiuxian0
+    ipam:
+      driver: default
+      config:
+        # 使用自定义 IP 范围避免冲突
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
