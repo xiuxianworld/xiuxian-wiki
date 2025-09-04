@@ -3,7 +3,7 @@ import { CategoryType } from '@/types';
 
 // Generic database operations for all categories
 export class DatabaseService {
-  private getModel(category: CategoryType) {
+  private getModel(category: CategoryType): any {
     const modelMap = {
       spiritualRoots: prisma.spiritualRoot,
       cultivationRealms: prisma.cultivationRealm,

@@ -74,16 +74,24 @@ export default function CategoryPage() {
     setFilteredItems(filtered);
   };
 
-  const getFilterOptions = () => {
+  const getFilterOptions = (): Array<{
+    key: string;
+    label: string;
+    options: Array<{ value: string; label: string }>;
+  }> => {
     if (!items.length) return [];
 
-    const options = [];
+    const options: Array<{
+      key: string;
+      label: string;
+      options: Array<{ value: string; label: string }>;
+    }> = [];
     
     // Get unique values for filterable fields
     const filterableFields = ['type', 'grade', 'level', 'category', 'species'];
     
     filterableFields.forEach(field => {
-      const uniqueValues = [...new Set(items.map(item => item[field]).filter(Boolean))];
+      const uniqueValues = Array.from(new Set(items.map(item => item[field]).filter(Boolean))) as string[];
       if (uniqueValues.length > 1) {
         options.push({
           key: field,
@@ -114,7 +122,7 @@ export default function CategoryPage() {
     return fieldDefs.slice(0, 4).map(field => ({
       key: field.key,
       label: field.label,
-      type: field.type
+      type: field.type === 'long-text' ? 'text' : field.type
     }));
   };
 
